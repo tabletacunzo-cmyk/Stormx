@@ -1,0 +1,4 @@
+httpx
+uvicorn
+fastapi
+chromadb>=0.5.0

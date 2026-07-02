@@ -1,0 +1,26 @@
+# Personal data
+stormx_projects.json
+stormx_projects.json.bak
+stormx_settings.json
+stormx_settings.json.bak
+stormo_projects.json
+stormo_projects.json.bak
+.jwt_secret
+.env
+
+# Runtime data
+checkpoints/
+history/
+rag_data/
+observability.json
+
+# Logs
+*.log
+
+# Python cache
+__pycache__/
+*.pyc
+
+# OS
+.DS_Store
+Thumbs.db

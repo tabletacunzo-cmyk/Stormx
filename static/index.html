@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stormo AI</title>
+<link rel="stylesheet" href="/style.css?v=21">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="logo" id="logo-link">
+      <span class="logo-icon">&#127916;</span>
+      <span class="logo-text">Stormo AI</span>
+      <span class="logo-badge" id="header-badge">deepseek-v4-flash-free</span>
+    </div>
+    <div class="header-actions" id="header-actions">
+      <span class="project-name" id="header-project-name"></span>
+
+
+      <button class="icon-btn" id="btn-skills" title="Skill Library">&#128218;</button>
+      <button class="icon-btn" id="btn-tools" title="Tool Tester">&#129504;</button>
+      <button class="icon-btn" id="btn-settings" title="Settings">&#9881;&#65039;</button>
+    </div>
+  </header>
+
+  <main id="main-content" class="main-content">
+    <!-- HOME -->
+    <div id="view-home" class="view">
+      <div class="home-container">
+        <div class="home-header">
+          <h1>&#127916; Your Storm Projects</h1>
+          <p class="home-subtitle">Each project has its own orchestrator and agent graph.</p>
+        </div>
+        <div style="margin-bottom:12px"><input type="text" id="project-search" placeholder="Search project..." style="width:100%;max-width:400px;background:var(--bg-primary);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);padding:8px 12px;font-size:.82rem"></div>
+        <div class="project-grid" id="project-grid"></div>
+        <div style="display:flex;gap:10px;justify-content:center;margin-top:20px">
+          <button class="btn btn-primary" id="btn-new-project">+ New Project</button>
+          <button class="btn btn-secondary" id="btn-import-project">&#128230; Import</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- GRAPH EDITOR (full page, n8n style) -->
+    <div id="view-graph" class="view" style="display:none">
+      <div class="graph-layout">
+        <!-- Toolbar -->
+        <div class="graph-toolbar">
+          <div class="gt-left">
+            <span class="gt-title" id="graph-project-title">Project</span>
+          </div>
+          <div class="gt-center">
+            <button class="btn btn-primary gt-btn" id="gt-run">&#9654;&#65039; Run</button>
+            <button class="btn btn-secondary gt-btn" id="gt-stop" style="display:none">&#9209;&#65039; Stop</button>
+            <div class="gt-dropdown">
+              <button class="btn btn-secondary gt-btn" id="gt-add-btn">+ Add &#9660;</button>
+              <div class="gt-dropdown-menu" id="gt-add-menu">
+                <button class="gt-dropdown-item" id="gt-add-agent">+ Agent</button>
+                <button class="gt-dropdown-item" id="gt-add-channel">+ Channel</button>
+                <button class="gt-dropdown-item" id="gt-add-template">&#128218; From template</button>
+                <div class="gt-dropdown-sep"></div>
+                <button class="gt-dropdown-item" id="gt-add-edge">&#8594; Connect nodes</button>
+                <button class="gt-dropdown-item" id="gt-remove-edges">&#10060; Delete</button>
+              </div>
+            </div>
+            <button class="btn btn-secondary gt-btn" id="gt-chat-btn">&#128172; Go to chat</button>
+            <button class="btn btn-secondary gt-btn" id="gt-monitor-btn">&#128200; Monitoring</button>
+            <button class="btn btn-secondary gt-btn" id="gt-log-btn">&#128203; External Calls &#9888;&#65039; WIP</button>
+          </div>
+          <div class="gt-right">
+            <span id="gt-cost" style="display:none"></span>
+            <span class="gt-info" id="gt-status">Ready</span>
+            <span class="gt-sep">|</span>
+            <button class="btn btn-secondary" id="gt-analytics-btn" style="padding:2px 8px;font-size:.72rem">&#128200; Analytics</button>
+            <button class="btn btn-secondary" id="gt-share-btn" style="padding:2px 8px;font-size:.72rem">&#128230; Export</button>
+          </div>
+        </div>
+        <!-- Graph canvas -->
+        <div class="graph-canvas" id="graph-canvas">
+          <svg id="graph-svg" class="graph-svg">
+            <defs>
+              <linearGradient id="nodeGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stop-color="rgba(44,44,46,0.98)" />
+                <stop offset="100%" stop-color="rgba(28,28,30,0.95)" />
+              </linearGradient>
+              <filter id="nodeShadow">
+                <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="rgba(0,0,0,0.5)" />
+              </filter>
+              <filter id="packetGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="3" result="blur" />
+                <feComposite in="SourceGraphic" in2="blur" operator="over" />
+              </filter>
+              <filter id="packetTrail" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="6" result="blur" />
+                <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0.5 0" />
+                <feComposite in="SourceGraphic" in2="blur" operator="over" />
+              </filter>
+              <!-- Grid pattern for background -->
+              <pattern id="gridPattern" width="40" height="40" patternUnits="userSpaceOnUse">
+                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="0.5" />
+              </pattern>
+              <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                <polygon points="0 0, 10 3.5, 0 7" fill="var(--border-active)" />
+              </marker>
+              <marker id="arrowhead-active" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                <polygon points="0 0, 10 3.5, 0 7" fill="var(--accent)" />
+              </marker>
+              <marker id="arrowhead-required" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                <polygon points="0 0, 10 3.5, 0 7" fill="#ef4444" />
+              </marker>
+            </defs>
+            <!-- Background grid -->
+            <rect width="100%" height="100%" fill="url(#gridPattern)" pointer-events="none" />
+            <!-- Edges layer -->
+            <g id="graph-edges"></g>
+            <!-- Nodes layer -->
+            <g id="graph-nodes"></g>
+            <!-- Temp edge while dragging -->
+            <path id="temp-edge" class="graph-temp-edge" style="display:none" />
+          </svg>
+          <!-- Empty state overlay -->
+          <div class="graph-empty" id="graph-empty">
+            <div class="ge-icon">&#127916;</div>
+            <h3>Create your orchestrator</h3>
+            <p>Click "+ Agent" to add the first node to the graph.<br>Drag nodes to arrange them. Connect agents to each other.</p>
+          </div>
+          <!-- Brief input bar -->
+          <div class="graph-brief-bar" id="graph-brief-bar">
+            <textarea id="graph-brief" rows="1" placeholder="Describe what to create... (e.g. 'How to make bread at home tutorial')"></textarea>
+            <div class="gbb-meta" id="gbb-meta">
+              <span class="gbb-agents" id="gbb-agents">0 agents</span>
+            </div>
+          </div>
+        </div>
+        <!-- Bottom panel: output / timeline -->
+        <div class="graph-bottom" id="graph-bottom">
+          <div class="gb-tabs">
+            <button class="gb-tab active" data-panel="output">&#128172; Output</button>
+            <button class="gb-tab" data-panel="timeline">&#128337; Timeline / Checkpoint</button>
+            <button class="gb-tab" data-panel="monitor">&#128200; Monitor</button>
+            <button class="gb-tab" data-panel="log">&#128242; Chiamate esterne</button>
+          </div>
+          <div class="gb-content">
+            <div class="gb-panel active" id="gb-output">
+              <div class="chat-messages" id="gb-chat-messages">
+                <div class="welcome" id="gb-welcome">
+                  <p style="color:var(--text-muted);text-align:center;padding:20px">Run the pipeline to see the output here. Each node in the graph will show its contribution in real time.</p>
+                </div>
+              </div>
+            </div>
+            <div class="gb-panel" id="gb-timeline">
+              <div id="timeline-content">
+                <p style="color:var(--text-muted);text-align:center;padding:20px" id="timeline-empty">No checkpoints available. Run the pipeline to generate step history.</p>
+              </div>
+            </div>
+            <div class="gb-panel" id="gb-monitor">
+              <div id="monitor-content">
+                <div class="monitor-empty" id="monitor-empty">
+                  <p style="color:var(--text-muted);text-align:center;padding:20px">Start the pipeline to see real-time monitoring.</p>
+                </div>
+                <div id="monitor-dashboard" style="display:none">
+                  <div class="monitor-header">
+                    <div class="monitor-progress-bar" id="monitor-progress-bar"><div class="monitor-progress-fill" id="monitor-progress-fill"></div></div>
+                    <div class="monitor-stats-row">
+                      <span class="monitor-stat"><strong id="monitor-completed">0</strong>/<span id="monitor-total">0</span> agents completed</span>
+                      <span class="monitor-stat">Time: <span id="monitor-time">0s</span></span>
+                      <span class="monitor-stat">Tokens: <span id="monitor-tokens">0</span></span>
+                      <!-- <span style="display:none">Costo: $<span id="monitor-cost">0.00</span></span> -->
+                    </div>
+                  </div>
+                  <div class="monitor-agents" id="monitor-agents"></div>
+            </div>
+          </div>
+          <div class="gb-panel" id="gb-log" style="padding:12px">
+            <div class="form-row" style="margin-bottom:8px;gap:6px">
+              <button class="btn btn-primary" id="gt-log-refresh" style="padding:4px 12px;font-size:.72rem">&#8635; Refresh</button>
+              <button class="btn btn-secondary" id="gt-log-clear" style="padding:4px 12px;font-size:.72rem">&#128465; Clear</button>
+              <span style="font-size:.7rem;color:var(--text-muted);margin-left:auto" id="log-count">0 calls</span>
+            </div>
+            <div id="log-entries" style="font-size:.68rem;font-family:var(--font-mono);overflow-y:auto;max-height:calc(100vh - 300px)"></div>
+          </div>
+        </div>
+      </div>
+        </div>
+      </div>
+      <!-- Telemetry floating overlay -->
+      <div class="telemetry-overlay" id="telemetry-overlay" style="display:none">
+        <div class="tel-stats">
+          <span class="tel-stat"><span class="tel-dot live"></span> <span id="tel-active">0</span> active</span>
+          <span class="tel-stat">⏱ <span id="tel-latency">0</span>ms</span>
+          <span class="tel-stat">📦 <span id="tel-packets">0</span></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHAT VIEW (classic) -->
+    <div id="view-chat" class="view" style="display:none">
+      <div class="chat-layout">
+        <aside class="sidebar" id="chat-sidebar">
+          <div class="sidebar-section">
+            <div class="sidebar-title">&#129302; Agents</div>
+            <div id="chat-agent-list"></div>
+          </div>
+          <div class="sidebar-section">
+            <div class="sidebar-title">Pipeline</div>
+            <div class="stats">
+              <div class="stat-row"><span class="stat-label">Executed:</span><span class="stat-value" id="chat-stat-pipelines">0</span></div>
+              <div class="stat-row"><span class="stat-label">API Calls:</span><span class="stat-value" id="chat-stat-calls">0</span></div>
+              <div class="stat-row" style="display:none"><span class="stat-label">Cost:</span><span class="stat-value" id="chat-stat-cost">$0.00</span></div>
+            </div>
+          </div>
+          <div class="sidebar-section sidebar-actions">
+            <button class="sidebar-btn" id="chat-btn-graph">&#128279; Edit graph</button>
+            <button class="sidebar-btn" id="chat-btn-clear">&#128465;&#65039; New chat</button>
+          </div>
+        </aside>
+        <div class="chat-area">
+          <div class="chat-messages" id="chat-messages">
+            <div class="welcome" id="chat-welcome">
+              <div class="welcome-icon">&#127916;</div>
+              <h2 id="chat-welcome-title">Stormo AI</h2>
+              <p>Enter a brief to start production.<br>The orchestrator will coordinate the swarm of agents.</p>
+              <div class="welcome-hints">
+                <div class="hint-card" data-brief="Create a home bread-making tutorial, 60 seconds, modern style"><span>&#127838;</span> Cooking tutorial</div>
+                <div class="hint-card" data-brief="Latest flagship smartphone review, YouTube 10 min, technical tone"><span>&#128241;</span> Tech review</div>
+                <div class="hint-card" data-brief="30 sec ad for sustainable clothing brand, Gen Z target"><span>&#127911;</span> Ad spot</div>
+                <div class="hint-card" data-brief="Product launch storytelling: 2 min, emotional, voiceover"><span>&#127917;</span> Storytelling</div>
+              </div>
+            </div>
+          </div>
+          <div class="input-area" id="chat-input-area">
+            <textarea id="chat-brief" rows="2" placeholder="Describe the video to create... (e.g. 'Bread tutorial at home')"></textarea>
+            <div class="input-controls">
+              <div class="input-meta"><span id="chat-agent-count">0 agents ready</span></div>
+              <div class="input-actions">
+                <button class="btn btn-secondary" id="chat-btn-stop" style="display:none">&#9209;&#65039; Stop</button>
+                <button class="btn btn-primary" id="chat-btn-send">&#128640; Start production</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOG VIEW -->
+    <div id="view-log" class="view" style="display:none">
+      <div class="log-layout" style="display:flex;flex-direction:column;height:100%;padding:16px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-shrink:0">
+          <button class="btn btn-secondary" id="lv-back" style="padding:4px 10px;font-size:.76rem">&#11013;&#65039; Back</button>
+          <h2 style="font-size:1rem;font-weight:600;margin:0">&#128203; Chiamate esterne</h2>
+          <button class="btn btn-primary" id="lv-refresh" style="padding:4px 14px;font-size:.76rem">&#8635; Refresh</button>
+          <button class="btn btn-secondary" id="lv-autorefresh" style="padding:4px 14px;font-size:.76rem">&#9203; Auto</button>
+          <button class="btn btn-secondary" id="lv-clear" style="padding:4px 14px;font-size:.76rem">&#128465; Clear</button>
+          <span style="font-size:.72rem;color:var(--text-muted);margin-left:auto" id="lv-count">0 calls</span>
+        </div>
+        <div id="lv-toolbar" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;flex-shrink:0"></div>
+        <div id="lv-entries" style="flex:1;overflow-y:auto;font-size:.72rem;font-family:var(--font-mono);background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius);padding:4px"></div>
+      </div>
+    </div>
+
+  <footer>
+    <span class="status-dot" id="status-dot"></span>
+    <span id="status-text">Ready</span>
+  </footer>
+
+  <div class="obs-panel">
+    <button class="obs-btn" id="btn-obs" title="Observability">&#128200;</button>
+  </div>
+  <div class="assistant-panel">
+    <button class="assistant-btn" id="btn-assistant" title="AI Assistant">&#129302;</button>
+  </div>
+</div>
+
+<!-- ASSISTANT MODAL -->
+<div class="modal-overlay" id="assistant-modal">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-header"><h2>&#129302; Stormo AI Assistant</h2><button class="btn btn-secondary" id="asst-clear" style="padding:4px 10px;font-size:.72rem;margin-right:6px">&#128465;&#65039; New chat</button><button class="modal-close" id="asst-close">&times;</button></div>
+    <div class="modal-body" style="padding:0;display:flex;flex-direction:column;height:400px">
+      <div class="asst-messages" id="asst-messages" style="flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px">
+        <div class="asst-msg asst-bot">
+          <div class="asst-msg-content">Hi! I'm the Stormo AI assistant. I can help you configure your agents, write prompts, create tools, and optimize the pipeline. What would you like to do? &#128578;</div>
+        </div>
+      </div>
+      <div class="asst-input-area" style="border-top:1px solid var(--border);padding:10px 14px;display:flex;gap:8px">
+        <textarea id="asst-input" rows="1" placeholder="Ask me something..." style="flex:1;background:var(--bg-primary);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);padding:7px 11px;font-family:var(--font);font-size:.8rem;resize:none;outline:none"></textarea>
+        <button class="btn btn-primary" id="asst-send" style="padding:7px 14px">Send</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="new-project-modal">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-header"><h2>+ New Project</h2><button class="modal-close" id="np-close">&times;</button></div>
+    <div class="modal-body"><div class="form-group"><label>Name</label><input type="text" id="np-name" placeholder="e.g. my-stormx-project"></div></div>
+    <div class="modal-footer"><button class="btn btn-secondary" id="np-cancel">Cancel</button><button class="btn btn-primary" id="np-create">Create</button></div>
+  </div>
+</div>
+
+<!-- NODE EDITOR MODAL -->
+<div class="modal-overlay" id="node-modal">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header"><h2 id="node-modal-title">Edit Node</h2><button class="modal-close" id="nm-close">&times;</button></div>
+    <div class="modal-body" id="node-modal-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="nm-delete" style="color:var(--danger);margin-right:auto">Delete node</button>
+      <button class="btn btn-primary" id="nm-save">&#128190; Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- TEMPLATES MODAL -->
+<div class="modal-overlay" id="templates-modal">
+  <div class="modal" style="max-width:540px">
+    <div class="modal-header"><h2>&#128218; Agent Templates</h2><button class="modal-close" id="templates-close">&times;</button></div>
+    <div class="modal-body">
+      <p style="font-size:.75rem;color:var(--text-muted);margin-bottom:10px">Create a new agent from a predefined template. The template includes name, color, prompt, and basic tools.</p>
+      <div id="templates-list" style="display:flex;flex-direction:column;gap:6px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ANALYTICS MODAL -->
+<div class="modal-overlay" id="analytics-modal">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-header"><h2>&#128200; Project Analytics</h2><button class="modal-close" id="analytics-close">&times;</button></div>
+    <div class="modal-body" id="analytics-body">
+      <div id="analytics-content"><p style="color:var(--text-muted);text-align:center;padding:20px">Loading...</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-overlay" id="settings-modal">
+  <div class="modal" style="max-width:700px">
+    <div class="modal-header"><h2>&#9881;&#65039; Settings</h2><button class="modal-close" id="settings-close">&times;</button></div>
+    <div class="modal-body">
+      <div class="settings-tabs">
+        <button class="settings-tab active" data-tab="orchestrator">&#129504; Orchestrator</button>
+        <button class="settings-tab" data-tab="rag">&#128214; RAG</button>
+        <button class="settings-tab" data-tab="mcp">&#128279; MCP</button>
+        <button class="settings-tab" data-tab="providers">&#127760; Providers</button>
+      </div>
+      <div class="settings-content active" id="settings-orchestrator"></div>
+      <div class="settings-content" id="settings-rag"></div>
+      <div class="settings-content" id="settings-mcp">
+        <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:14px">Model Context Protocol: register external HTTP tools.</p>
+        <div id="mcp-presets" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px"></div>
+        <div id="mcp-tools-list"></div>
+        <div class="form-row" style="gap:8px">
+          <div class="form-group"><label>Name</label><input type="text" id="mcp-new-name" placeholder="tool_name"></div>
+          <div class="form-group" style="flex:2"><label>URL</label><input type="text" id="mcp-new-url" placeholder="https://my-api/tool"></div>
+          <div class="form-group" style="flex:2"><label>Description</label><input type="text" id="mcp-new-desc" placeholder="What it does"></div>
+        </div>
+        <div class="form-group"><label>API Key / Token</label><input type="password" id="mcp-new-apikey" placeholder="Access token"></div>
+        <button class="btn btn-secondary" id="mcp-add">+ Register MCP</button>
+      </div>
+      <div class="settings-content" id="settings-providers"></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-secondary" id="settings-reset">Defaults</button><button class="btn btn-primary" id="settings-save">&#128190; Save</button></div>
+  </div>
+</div>
+
+<!-- SKILLS MODAL -->
+<div class="modal-overlay" id="skills-modal">
+  <div class="modal" style="max-width:640px">
+    <div class="modal-header"><h2>&#128218; Skill Library</h2>
+      <div style="display:flex;gap:6px;margin-right:6px">
+        <input type="text" id="skills-import-url" value="https://skills.palebluedot.live/api/skills?limit=200" placeholder="URL API skills..." style="background:var(--bg-primary);border:1px solid var(--border);border-radius:4px;color:var(--text-primary);padding:4px 8px;font-size:.72rem;width:240px;outline:none">
+        <button class="btn btn-secondary" id="skills-browse-btn" style="padding:4px 10px;font-size:.72rem" title="Open skills.sh in browser">&#128269; skills.sh</button>
+        <button class="btn btn-secondary" id="skills-import-btn" style="padding:4px 10px;font-size:.72rem">&#128279; Import</button>
+      </div>
+      <button class="modal-close" id="skills-close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="skills-tabs">
+        <button class="skills-tab active" data-skills-panel="builtin">&#128218; Built-in Skills</button>
+        <button class="skills-tab" data-skills-panel="imported">&#128279; Imported</button>
+      </div>
+      <div class="skills-panel active" id="skills-builtin">
+        <p style="font-size:.75rem;color:var(--text-muted);margin-bottom:8px">Click on a skill to install it on an existing agent.</p>
+        <input type="text" id="skills-builtin-search" placeholder="Search built-in skills..." style="width:100%;background:var(--bg-primary);border:1px solid var(--border);border-radius:4px;color:var(--text-primary);padding:6px 8px;font-size:.72rem;margin-bottom:8px;outline:none;box-sizing:border-box">
+        <div id="skills-builtin-list" style="display:flex;flex-direction:column;gap:6px"></div>
+      </div>
+      <div class="skills-panel" id="skills-imported">
+        <p style="font-size:.75rem;color:var(--text-muted);margin-bottom:10px">Skills imported from external URLs.</p>
+        <input type="text" id="skills-imported-search" placeholder="Search imported skills..." style="width:100%;background:var(--bg-primary);border:1px solid var(--border);border-radius:4px;color:var(--text-primary);padding:6px 8px;font-size:.72rem;margin-bottom:8px;outline:none;box-sizing:border-box">
+        <div id="skills-imported-list" style="display:flex;flex-direction:column;gap:6px">
+          <p style="color:var(--text-muted);text-align:center;padding:20px;font-size:.8rem">No imported skills. Use the field above to import from a URL.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOOLS MODAL -->
+<div class="modal-overlay" id="tools-modal">
+  <div class="modal" style="max-width:720px">
+    <div class="modal-header"><h2>&#129504; Tool Tester</h2><button class="modal-close" id="tools-close">&times;</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Agent:</label><select id="tools-agent-select" class="select-full"></select></div>
+      <p class="tools-hint">Each tool is <code>run(params)</code> in Python. Use <code>params.get()</code>.</p>
+      <div id="tools-list"></div>
+      <button class="btn btn-secondary" id="tools-add">+ Add</button>
+      <div class="tools-test"><h3>Quick Test</h3>
+        <div class="form-group"><label>Tool:</label><select id="tools-test-select" class="select-full"></select></div>
+        <div class="form-group"><label>Params (JSON):</label><textarea id="tools-test-params" rows="2" placeholder='{"format":"tutorial"}'></textarea></div>
+        <button class="btn btn-primary" id="tools-test-run">&#9654;&#65039; Run</button>
+        <pre id="tools-test-result"></pre>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-primary" id="tools-save">&#128190; Save</button></div>
+  </div>
+</div>
+
+<!-- OBSERVABILITY MODAL -->
+<div class="modal-overlay" id="obs-modal">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-header"><h2>&#128200; Observability</h2><button class="modal-close" id="obs-close">&times;</button></div>
+    <div class="modal-body" id="obs-body"></div>
+  </div>
+</div>
+
+<!-- EXPORT MODAL -->
+<div class="modal-overlay" id="export-modal">
+  <div class="modal" style="max-width:650px">
+    <div class="modal-header"><h2>&#128230; Export Output</h2><button class="modal-close" id="export-close">&times;</button></div>
+    <div class="modal-body"><div id="export-content" class="export-content"></div></div>
+    <div class="modal-footer"><button class="btn btn-primary" id="export-download">&#128190; Download</button></div>
+  </div>
+</div>
+
+<!-- TIME TRAVEL MODAL -->
+<div class="modal-overlay" id="tt-modal">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-header"><h2>&#128337; Time Travel — <span id="tt-node-name"></span></h2><button class="modal-close" id="tt-close">&times;</button></div>
+    <div class="modal-body">
+      <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:12px">
+        Step <span id="tt-step"></span> | Time: <span id="tt-time"></span> | <span style="display:none">Cost: $<span id="tt-cost"></span></span>
+      </div>
+      <div class="form-group"><label>Output at checkpoint time</label>
+        <textarea id="tt-output" rows="6" readonly style="font-family:var(--font-mono);font-size:0.72rem"></textarea>
+      </div>
+      <div class="form-group"><label>Edit the prompt (it will restart from here)</label>
+        <textarea id="tt-prompt" rows="4" style="font-family:var(--font-mono);font-size:0.72rem"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="tt-cancel">Cancel</button>
+      <button class="btn btn-primary" id="tt-restart">&#128260; Restart from this step</button>
+    </div>
+  </div>
+</div>
+
+<!-- AUTH MODAL -->
+<script>
+window.addEventListener('error',function(e){
+  var b=document.createElement('div');
+  b.style.cssText='position:fixed;bottom:0;left:0;right:0;background:#c0392b;color:#fff;font:12px monospace;padding:8px 12px;z-index:99999;white-space:pre-wrap';
+  b.textContent='JS ERROR: '+(e.message||e)+' @ '+(e.filename||'')+' +'+(e.lineno||'');
+  document.body.appendChild(b);
+});
+</script>
+<script src="/script.js?v=22"></script>
+</body>
+</html>
