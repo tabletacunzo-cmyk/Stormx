@@ -9,7 +9,7 @@ let graphStatus={};
 let checkpoints=[];
 let chatOrkMsg=null, chatAgentMsg=null;
 let monitorState=null;
-let asstHistory=[];
+
 let importedSkills=[], builtinSkills=[];
 let chatHistory=[];
 let prevPage='/';
@@ -1651,15 +1651,6 @@ document.getElementById('gbb-agents').textContent=graphNodes.filter(n=>n.type===
   document.getElementById('obs-close').addEventListener('click',()=>document.getElementById('obs-modal').classList.remove('open'));
   document.getElementById('obs-modal').addEventListener('click',e=>{if(e.target===e.currentTarget)document.getElementById('obs-modal').classList.remove('open')});
 
-  // Assistant
-  const asstModal=document.getElementById('assistant-modal');
-  document.getElementById('btn-assistant').addEventListener('click',()=>asstModal.classList.add('open'));
-  document.getElementById('asst-close').addEventListener('click',()=>asstModal.classList.remove('open'));
-  asstModal.addEventListener('click',e=>{if(e.target===e.currentTarget)asstModal.classList.remove('open')});
-  document.getElementById('asst-clear').addEventListener('click',()=>{asstHistory=[];document.getElementById('asst-messages').innerHTML='<div class="asst-msg asst-bot"><div class="asst-msg-content">Hi! I\'m the Stormo AI assistant. I can help you configure your agents, write prompts, create tools, and optimize the pipeline. What would you like to do? &#128578;</div></div>'});
-  document.getElementById('asst-send').addEventListener('click',sendAssistantMsg);
-  document.getElementById('asst-input').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendAssistantMsg()}});
-
   // Export
   document.getElementById('export-close').addEventListener('click',()=>document.getElementById('export-modal').classList.remove('open'));
   document.getElementById('export-modal').addEventListener('click',e=>{if(e.target===e.currentTarget)document.getElementById('export-modal').classList.remove('open')});
@@ -2182,70 +2173,6 @@ async function openObs(){
       <div class="stat-row"><span class="stat-label">Time</span><span class="stat-value">${Math.round(m.time)}s</span></div></div>`}
     h+='</div>';document.getElementById('obs-body').innerHTML=h
   }catch(e){document.getElementById('obs-body').innerHTML='<p style="color:var(--danger)">Error: '+esc(e.message)+'</p>'}
-}
-
-async function sendAssistantMsg(){
-  const inp=document.getElementById('asst-input');const msg=inp.value.trim();
-  if(!msg)return;inp.value='';const msgsEl=document.getElementById('asst-messages');
-  const userDiv=document.createElement('div');userDiv.className='asst-msg asst-user';
-  userDiv.innerHTML=`<div class="asst-msg-content">${esc(msg)}</div>`;msgsEl.appendChild(userDiv);
-  const loadDiv=document.createElement('div');loadDiv.className='asst-msg asst-bot asst-loading';
-  loadDiv.innerHTML='<div class="asst-msg-content"></div>';msgsEl.appendChild(loadDiv);
-  msgsEl.scrollTop=msgsEl.scrollHeight;
-  asstHistory.push({role:'user',content:msg});
-  try{
-    const pn=currentProject?.name||'default';
-    const resp=await fetch('/api/assistant/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({project:pn,messages:asstHistory})});
-    if(!resp.ok)throw new Error('Server error');
-    const reader=resp.body.getReader();const decoder=new TextDecoder();let buf='';
-    const body=loadDiv.querySelector('.asst-msg-content');body.textContent='';
-    loadDiv.classList.remove('asst-loading');
-    let fullResponse='';
-    while(true){
-      const{done,value}=await reader.read();if(done)break;
-      buf+=decoder.decode(value,{stream:true});
-      const parts=buf.split('\n');buf=parts.pop()||'';
-      for(const line of parts){const t=line.trim();
-        if(t.startsWith('data: ')){const j=t.slice(6).trim();if(!j||j==='[DONE]')continue;
-          try{const d=JSON.parse(j);
-            if(d.type==='chunk'){body.textContent+=d.content;fullResponse+=d.content}
-            else if(d.type==='action'){
-              body.textContent+='\n⚡ '+d.label;
-              if(d.result&&d.result.message)body.textContent+=': '+d.result.message;
-              body.textContent+=' ';
-              if(currentProject&&d.action==='refresh'&&currentProject.name){
-                loadProjectConfig(currentProject.name).then(newCfg=>{
-                  config=newCfg;
-                  if(document.getElementById('view-graph').style.display!=='none'){
-                    const g=config.graph||{nodes:[],edges:[]};
-                    graphNodes=(g.nodes||[]).map(n=>({...n}));
-                    graphEdges=(g.edges||[]).map(e=>({...e,type:e.type||'optional'}));
-                    const chC=graphNodes.filter(n=>n.type==='channel').length;
-                    document.getElementById('gbb-agents').textContent=Math.max(0,graphNodes.filter(n=>n.type==='agent').length)+' agents'+(chC?', '+chC+' channels':'');
-                    if(graphNodes.length===0)document.getElementById('graph-empty').style.display='';
-                    else document.getElementById('graph-empty').style.display='none';
-                    renderGraphSVG()
-                  }
-                  if(document.getElementById('view-chat').style.display!=='none'){
-                    const list=document.getElementById('chat-agent-list');list.innerHTML='';
-                    Object.keys(config.agents).forEach(a=>{
-                      const col=config.agents[a].color||'#888';
-                      const item=document.createElement('div');item.className='agent-item idle';item.dataset.agent=a;
-                      item.innerHTML='<span class="dot" style="background:'+col+'"></span><span class="name">@'+a+'</span>';
-                      list.appendChild(item)
-                    });
-                    document.getElementById('chat-agent-count').textContent=Object.keys(config.agents).length+' agents ready'
-                  }
-                })
-              }
-            }
-            else if(d.type==='error')body.textContent+='\n❌ ERROR: '+d.content
-          }catch(e){}}}
-      msgsEl.scrollTop=msgsEl.scrollHeight
-    }
-    if(fullResponse)asstHistory.push({role:'assistant',content:fullResponse})
-  }catch(e){loadDiv.querySelector('.asst-msg-content').textContent='ERROR: '+e.message;loadDiv.classList.remove('asst-loading')}
-  msgsEl.scrollTop=msgsEl.scrollHeight
 }
 
 function renderSkillsList(containerId,skills,builtin){

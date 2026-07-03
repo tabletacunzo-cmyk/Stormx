@@ -210,20 +210,6 @@ footer{display:flex;align-items:center;gap:8px;padding:4px 20px;background:rgba(
 
 .export-content{white-space:pre-wrap;font-family:var(--font-mono);font-size:.68rem;background:var(--bg-primary);border:1px solid var(--border);border-radius:var(--radius);padding:12px;max-height:400px;overflow:auto;color:var(--text-secondary);line-height:1.5}
 
-/* ASSISTANT */
-.assistant-panel{position:fixed;bottom:36px;right:56px;z-index:50}
-.assistant-btn{width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:var(--accent);color:#fff;cursor:pointer;font-size:.95rem;display:flex;align-items:center;justify-content:center;transition:all .2s;box-shadow:var(--shadow-sm)}
-.assistant-btn:hover{opacity:.9}
-.asst-messages{scroll-behavior:smooth}
-.asst-msg{display:flex;flex-direction:column;max-width:85%}
-.asst-msg.asst-user{align-self:flex-end}
-.asst-msg.asst-bot{align-self:flex-start}
-.asst-msg-content{padding:10px 14px;border-radius:14px;font-size:.8rem;line-height:1.5;background:var(--bg-tertiary);color:var(--text-primary);border:1px solid var(--border)}
-.asst-msg.asst-user .asst-msg-content{background:var(--accent);border-color:var(--accent);color:#fff}
-.asst-msg.asst-bot .asst-msg-content{background:var(--bg-card)}
-.asst-msg.asst-loading .asst-msg-content::after{content:'...';animation:asst-dot 1.2s steps(3,infinite)}
-@keyframes asst-dot{0%{content:' .'}33%{content:' ..'}66%{content:' ...'}}
-
 /* SKILLS MODAL */
 .skills-tabs{display:flex;gap:0;margin-bottom:12px;border-bottom:1px solid var(--border)}
 .skills-tab{padding:6px 14px;font-size:.72rem;cursor:pointer;border:none;background:transparent;color:var(--text-muted);border-bottom:2px solid transparent;transition:all .2s;font-family:var(--font);letter-spacing:-.01em}
