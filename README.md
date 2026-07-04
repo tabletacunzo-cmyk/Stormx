@@ -56,7 +56,8 @@
 - Project export/import (JSON) for sharing and backup
 - Filesystem-based persistence — no external database required
 
----
+---<img width="2880" height="1536" alt="Screenshot 2026-07-04 140309" src="https://github.com/user-attachments/assets/78d6d3a3-bdaf-4330-9f98-5e3735e05de1" />
+
 
 ## Quick Start
 
