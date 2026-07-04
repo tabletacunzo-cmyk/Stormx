@@ -1,3 +1,5 @@
+<img width="1672" height="568" alt="Screenshot 2026-07-04 135836" src="https://github.com/user-attachments/assets/4da5103c-afa3-4d50-a816-e337721c4ee5" />
+
 # Stormx — Multi-Agent Orchestration Platform
 
 [![Python](https://img.shields.io/badge/Python-3.12+-3776AB?logo=python&logoColor=white)](https://python.org)
@@ -7,6 +9,8 @@
 **Stormx** is an open-source platform for creating and managing **flocks of AI agents** through a single, intuitive web UI. Design visual agent pipelines with a drag-and-drop graph editor, connect to messaging channels (Telegram, Discord, WhatsApp), equip agents with MCP tools and RAG knowledge bases, and orchestrate complex multi-agent workflows — all from your browser.
 
 > Inspired by n8n-style visual workflows, but purpose-built for AI agent orchestration.
+
+
 
 ---
 
@@ -85,6 +89,8 @@ Open **http://localhost:7777** in your browser.
 ---
 
 ## Usage Guide
+<img width="2858" height="1530" alt="Screenshot 2026-07-04 133141" src="https://github.com/user-attachments/assets/d6c3135b-b76f-4349-b005-4a74e9b67dc5" />
+
 
 ### 1. Create a Project
 From the home screen, click **+ New Project** and give it a name. A default project is created automatically.
